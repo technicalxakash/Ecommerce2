@@ -1,54 +1,11 @@
-# ============================
-# Python & Django ignores
-# ============================
+myenv/
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-*.so
-
-# Ignore virtual environment
-myenv/
-venv/
-env/
-
-# Ignore SQLite database
 db.sqlite3
-
-# Ignore Django media (uploaded files)
 media/
-
-# Ignore static files collected by collectstatic
-staticfiles/
-
-# Ignore migrations (optional — only if you recreate often)
-*/migrations/__pycache__/
-*/migrations/*.pyc
-*/migrations/*.py~
-
-# ============================
-# Environment & Configuration
-# ============================
 .env
-*.env
-pyvenv.cfg
-
-# ============================
-# IDE / Editor files
-# ============================
+staticfiles/
 .vscode/
 .idea/
-
-# ============================
-# OS-specific files
-# ============================
 .DS_Store
 Thumbs.db
-
-# ============================
-# Logs and backups
-# ============================
-*.log
-*.bak
-*.tmp
-*.swp
