@@ -1,0 +1,35 @@
+body {
+  background-color: #f8f9fa;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.4rem;
+}
+
+.product-card {
+  transition: transform 0.3s ease-in-out;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+}
+
+.product-image {
+  height: 220px;
+  object-fit: cover;
+}
+
+.product-detail-image {
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.price {
+  font-size: 1.1rem;
+  color: #28a745;
+}
+
+.footer {
+  margin-top: 50px;
+}

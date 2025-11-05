@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+
+<h1 class="text-center mb-4">Our Products</h1>
+<div class="row">
+  {% for product in products %}
+  <div class="col-md-3">
+    <div class="card mb-4 shadow-sm text-center">
+      <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+      <div class="card-body">
+        <h5 class="card-title">{{ product.name }}</h5>
+        <p class="card-text text-success fw-bold">₹{{ product.price }}</p>
+
+        <!-- ✅ Add to Cart Button (AJAX) -->
+        <a href="{% url 'add_to_cart' product.id %}" class="btn btn-success btn-sm add-to-cart-btn">
+          🛒 Add to Cart
+        </a>
+
+        <!-- View Details -->
+        <a href="{% url 'product_detail' product.id %}" class="btn btn-primary btn-sm">View Details</a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-center">No products available yet.</p>
+  {% endfor %}
+</div>
+
+{% endblock %}
