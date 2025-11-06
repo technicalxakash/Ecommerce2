@@ -1,35 +1,50 @@
+/* 💅 General Page Styling */
 body {
   background-color: #f8f9fa;
 }
 
-.navbar-brand {
-  font-weight: bold;
-  font-size: 1.4rem;
-}
-
+/* 🛍 Product Card Styling */
 .product-card {
-  transition: transform 0.3s ease-in-out;
+  height: 100%;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease;
 }
 
 .product-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
 }
 
-.product-image {
-  height: 220px;
-  object-fit: cover;
+/* 🖼 Image Container with Fixed Height */
+.card-img-container {
+  width: 100%;
+  height: 200px; /* uniform image height */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
 }
 
-.product-detail-image {
-  max-height: 400px;
+/* 🖼 Images inside cards */
+.product-img {
+  max-height: 100%;
+  width: auto;
   object-fit: contain;
 }
 
-.price {
-  font-size: 1.1rem;
-  color: #28a745;
+/* 🧾 Buttons */
+.btn-success {
+  background-color: #198754;
+  border: none;
 }
 
-.footer {
-  margin-top: 50px;
+.btn-success:hover {
+  background-color: #157347;
+}
+
+/* 💳 Text center alignment for mobile */
+@media (max-width: 768px) {
+  .product-card {
+    margin-bottom: 20px;
+  }
 }

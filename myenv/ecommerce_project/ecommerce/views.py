@@ -3,9 +3,11 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from .models import Product
 from django.http import JsonResponse
-
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+import razorpay
+from .models import Product, Order
 
 # ------------------------------
 # 🏠 HOME PAGE (Protected)
@@ -28,8 +30,6 @@ def product_detail(request, pk):
 # ------------------------------
 # 🛒 ADD TO CART
 # ------------------------------
-from django.http import JsonResponse
-
 @login_required(login_url='login')
 def add_to_cart(request, pk):
     product = get_object_or_404(Product, pk=pk)
@@ -47,15 +47,13 @@ def add_to_cart(request, pk):
 
     request.session['cart'] = cart
 
-    # ✅ If request is AJAX, return JSON response
+    # ✅ AJAX Support for Add-to-Cart button
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         total_items = sum(item['quantity'] for item in cart.values())
         return JsonResponse({'success': True, 'cart_count': total_items})
 
-    # For normal (non-AJAX) requests
     messages.success(request, f"{product.name} added to cart.")
     return redirect('view_cart')
-
 
 
 # ------------------------------
@@ -69,7 +67,7 @@ def view_cart(request):
 
 
 # ------------------------------
-# ❌ REMOVE FROM CART
+# ❌ REMOVE ITEM FROM CART
 # ------------------------------
 @login_required(login_url='login')
 def remove_from_cart(request, pk):
@@ -82,14 +80,67 @@ def remove_from_cart(request, pk):
 
 
 # ------------------------------
-# 💳 CHECKOUT PAGE
+# 💳 CHECKOUT (Razorpay Integration)
 # ------------------------------
 @login_required(login_url='login')
 def checkout(request):
     cart = request.session.get('cart', {})
     total = sum(item['price'] * item['quantity'] for item in cart.values())
-    return render(request, 'checkout.html', {'cart': cart, 'total': total})
 
+    if total == 0:
+        messages.error(request, "Your cart is empty.")
+        return redirect('home')
+
+    # Razorpay client
+    client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+    amount_paise = int(total * 100)  # Convert rupees to paise
+
+    # Create Razorpay Order
+    payment = client.order.create({
+        'amount': amount_paise,
+        'currency': 'INR',
+        'payment_capture': 1
+    })
+
+    # Save order in DB
+    Order.objects.create(
+        user=request.user,
+        order_id=payment['id'],
+        amount=total,
+        status='Pending'
+    )
+
+    context = {
+        'cart': cart,
+        'total': total,
+        'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+        'razorpay_order_id': payment['id'],
+        'razorpay_amount': amount_paise,
+    }
+    return render(request, 'checkout.html', context)
+
+
+# ------------------------------
+# ✅ PAYMENT SUCCESS HANDLER
+# ------------------------------
+@csrf_exempt
+@login_required(login_url='login')
+def payment_success(request):
+    if request.method == "POST":
+        payment_id = request.POST.get('razorpay_payment_id')
+        order = Order.objects.filter(user=request.user).last()
+
+        if order:
+            order.razorpay_payment_id = payment_id
+            order.status = "Paid"
+            order.save()
+
+        # Clear the cart
+        request.session['cart'] = {}
+        messages.success(request, "✅ Payment Successful! Thank you for shopping with us.")
+        return render(request, 'payment_success.html', {'order': order})
+
+    return redirect('home')
 
 # ------------------------------
 # 👤 USER REGISTRATION
