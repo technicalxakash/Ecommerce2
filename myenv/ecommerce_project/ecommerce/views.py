@@ -8,6 +8,19 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import razorpay
 from .models import Product, Order
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from xhtml2pdf import pisa
+#=======================
+
+
+
+from django.http import HttpResponse, JsonResponse
+
+
+
+import io,os   # ✅ Add this line
+
 
 # ------------------------------
 # 🏠 HOME PAGE (Protected)
@@ -141,6 +154,12 @@ def payment_success(request):
         return render(request, 'payment_success.html', {'order': order})
 
     return redirect('home')
+#===============================================
+@login_required(login_url='login')
+def my_orders(request):
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'my_orders.html', {'orders': orders})
+
 
 # ------------------------------
 # 👤 USER REGISTRATION
@@ -195,3 +214,111 @@ def logout_view(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect('login')
+
+
+
+
+# ------------------------------
+# 📋 MY ORDERS PAGE
+# ------------------------------
+@login_required(login_url='login')
+def my_orders(request):
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'my_orders.html', {'orders': orders})
+
+
+# ------------------------------
+# 🧾 DOWNLOAD INVOICE AS PDF
+# ------------------------------
+import io
+import base64
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from xhtml2pdf import pisa
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from django.conf import settings
+import os
+from .models import Order
+
+
+@login_required(login_url='login')
+def download_invoice(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    # ✅ Convert logo to Base64 string
+    logo_path = os.path.join(settings.BASE_DIR, 'ecommerce', 'static', 'images', 'logo.jpg')
+    with open(logo_path, "rb") as image_file:
+        logo_data = base64.b64encode(image_file.read()).decode('utf-8')
+    logo_base64 = f"data:image/jpeg;base64,{logo_data}"
+
+    # Render the HTML with Base64 image
+    html = render_to_string('invoice_template.html', {
+        'order': order,
+        'logo_path': logo_base64  # base64 logo
+    })
+
+    # Generate PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice_{order.order_id}.pdf"'
+    pisa_status = pisa.CreatePDF(io.BytesIO(html.encode("UTF-8")), dest=response)
+
+    if pisa_status.err:
+        return HttpResponse("⚠️ Error generating invoice. Please try again.")
+    return response
+
+
+import json
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from .models import Order, Product
+
+@login_required(login_url='login')
+def admin_dashboard(request):
+    # ✅ Only admin/superuser can access
+    if not request.user.is_superuser:
+        messages.error(request, "Access Denied: Admins only.")
+        return redirect('home')
+
+    # Summary data
+    total_users = User.objects.count()
+    total_orders = Order.objects.count()
+    total_revenue = Order.objects.filter(status="Paid").aggregate(Sum('amount'))['amount__sum'] or 0
+
+    # Monthly revenue data
+    monthly_data = (
+        Order.objects.filter(status="Paid")
+        .annotate(month=TruncMonth('created_at'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+        .order_by('month')
+    )
+
+    months = [entry['month'].strftime("%b %Y") for entry in monthly_data]
+    revenues = [float(entry['total']) for entry in monthly_data]
+
+    # Top 5 Selling Products (placeholder if no product-order link)
+    top_products = Product.objects.all()[:5]
+    top_products_names = [p.name for p in top_products]
+    top_products_sales = [float(p.price) for p in top_products]
+
+    # Recent orders
+    recent_orders = Order.objects.order_by('-created_at')[:5]
+
+    # ✅ Convert to JSON for Chart.js
+    context = {
+        'total_users': total_users,
+        'total_orders': total_orders,
+        'total_revenue': total_revenue,
+        'months': json.dumps(months),
+        'revenues': json.dumps(revenues),
+        'top_products_names': json.dumps(top_products_names),
+        'top_products_sales': json.dumps(top_products_sales),
+        'recent_orders': recent_orders,
+    }
+
+    return render(request, 'admin_dashboard.html', context)

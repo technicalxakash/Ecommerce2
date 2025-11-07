@@ -20,4 +20,13 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('payment-success/', views.payment_success, name='payment_success'),
 
+
+    path('my-orders/', views.my_orders, name='my_orders'),
+
+    path('my-orders/', views.my_orders, name='my_orders'),
+   path('download-invoice/<int:order_id>/', views.download_invoice, name='download_invoice'),
+
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+
+
 ]

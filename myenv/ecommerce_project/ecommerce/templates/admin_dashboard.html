@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+
+<h2 class="text-center mb-4">📊 Admin Dashboard</h2>
+
+<!-- Summary Cards -->
+<div class="row text-center mb-4">
+  <div class="col-md-4">
+    <div class="card shadow-sm p-3 bg-primary text-white">
+      <h4>Total Revenue</h4>
+      <h3>₹{{ total_revenue }}</h3>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm p-3 bg-success text-white">
+      <h4>Total Orders</h4>
+      <h3>{{ total_orders }}</h3>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm p-3 bg-info text-white">
+      <h4>Total Users</h4>
+      <h3>{{ total_users }}</h3>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row">
+  <div class="col-md-7">
+    <div class="card shadow-sm p-4 mb-4">
+      <h5 class="text-center mb-3">📈 Monthly Revenue Overview</h5>
+      <canvas id="revenueChart" width="400" height="200"></canvas>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card shadow-sm p-4 mb-4">
+      <h5 class="text-center mb-3">🏆 Top 5 Selling Products</h5>
+      <canvas id="productChart" width="400" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="card shadow-sm p-4">
+  <h5 class="mb-3">🧾 Recent Orders</h5>
+  <table class="table table-striped table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Order ID</th>
+        <th>User</th>
+        <th>Amount (₹)</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in recent_orders %}
+      <tr>
+        <td>{{ order.order_id }}</td>
+        <td>{{ order.user.username }}</td>
+        <td>{{ order.amount }}</td>
+        <td>
+          {% if order.status == "Paid" %}
+            <span class="badge bg-success">Paid</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">{{ order.status }}</span>
+          {% endif %}
+        </td>
+        <td>{{ order.created_at|date:"d M Y" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-center text-muted">No recent orders.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- ✅ Fixed JavaScript Block -->
+<script>
+  // Convert Django context to JavaScript arrays safely
+  const months = JSON.parse('{{ months|safe|escapejs }}');
+  const revenues = JSON.parse('{{ revenues|safe|escapejs }}');
+  const topProducts = JSON.parse('{{ top_products_names|safe|escapejs }}');
+  const productSales = JSON.parse('{{ top_products_sales|safe|escapejs }}');
+
+  // ✅ Monthly Revenue Bar Chart
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, 'rgba(54, 162, 235, 0.8)');
+  gradient.addColorStop(1, 'rgba(54, 162, 235, 0.1)');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Revenue (₹)',
+        data: revenues,
+        backgroundColor: gradient,
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: 'Monthly Revenue Overview' }
+      },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // ✅ Top 5 Selling Products Pie Chart
+  const productCtx = document.getElementById('productChart').getContext('2d');
+  new Chart(productCtx, {
+    type: 'pie',
+    data: {
+      labels: topProducts,
+      datasets: [{
+        data: productSales,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.7)',
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(255, 206, 86, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(153, 102, 255, 0.7)'
+        ],
+        borderColor: 'white',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        title: { display: true, text: 'Top 5 Selling Products' }
+      }
+    }
+  });
+</script>
+
+{% endblock %}
