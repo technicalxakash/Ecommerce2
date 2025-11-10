@@ -1,28 +1,42 @@
-# Ignore virtual environment
+# =======================================
+# 🌍 Django Project .gitignore
+# =======================================
+
+# --- Virtual Environment ---
 myenv/
 venv/
 env/
 
-# Ignore Python cache
+# --- Python Cache ---
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 
-# Ignore system files
-.DS_Store
-Thumbs.db
+# --- Database ---
+db.sqlite3
 
-# Ignore compiled or temp files
-*.log
-*.pot
-*.pyc
-*.sqlite3
-
-# Ignore media (optional, if large)
+# --- Media Uploads ---
 media/
+*.log
 
-# Ignore IDE/editor folders
+# --- Static Build Files ---
+staticfiles/
+static_root/
+static/
+
+# --- Django Migrations ---
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# --- IDE & System Files ---
 .vscode/
 .idea/
 *.code-workspace
+.DS_Store
+Thumbs.db
+
+# --- Backup Files ---
+*.bak
+*.swp
+*.tmp
