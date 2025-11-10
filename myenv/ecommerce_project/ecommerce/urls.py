@@ -29,4 +29,15 @@ urlpatterns = [
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
 
 
+    # 👤 User Profile (NEW)
+    path('profile/', views.profile_view, name='profile'),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
+
+    # 🏠 Address Management (NEW)
+    path('addresses/', views.address_list, name='address_list'),
+    path('address/add/', views.add_address, name='add_address'),
+    path('address/edit/<int:pk>/', views.edit_address, name='edit_address'),
+    path('address/delete/<int:pk>/', views.delete_address, name='delete_address'),
+
+
 ]

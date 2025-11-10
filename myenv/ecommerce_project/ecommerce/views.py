@@ -322,3 +322,90 @@ def admin_dashboard(request):
     }
 
     return render(request, 'admin_dashboard.html', context)
+
+
+
+from .models import UserProfile, Address
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+# 🧑‍💼 Profile View
+@login_required(login_url='login')
+def profile_view(request):
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    addresses = Address.objects.filter(user=request.user)
+    return render(request, 'profile.html', {'profile': profile, 'addresses': addresses})
+
+
+# ✏️ Edit Profile
+@login_required(login_url='login')
+def edit_profile(request):
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        profile.phone = request.POST.get('phone')
+        profile.address = request.POST.get('address')
+
+        if 'profile_image' in request.FILES:
+            profile.profile_image = request.FILES['profile_image']
+
+        profile.save()
+        messages.success(request, "✅ Profile updated successfully!")
+        return redirect('profile')
+
+    return render(request, 'edit_profile.html', {'profile': profile})
+
+
+# 🏠 Address List
+@login_required(login_url='login')
+def address_list(request):
+    addresses = Address.objects.filter(user=request.user)
+    return render(request, 'address_list.html', {'addresses': addresses})
+
+
+# ➕ Add Address
+@login_required(login_url='login')
+def add_address(request):
+    if request.method == "POST":
+        Address.objects.create(
+            user=request.user,
+            full_name=request.POST['full_name'],
+            phone=request.POST['phone'],
+            pincode=request.POST['pincode'],
+            street=request.POST['street'],
+            city=request.POST['city'],
+            state=request.POST['state'],
+            landmark=request.POST.get('landmark', ''),
+            is_default='is_default' in request.POST
+        )
+        messages.success(request, "✅ Address added successfully!")
+        return redirect('address_list')
+    return render(request, 'add_address.html')
+
+
+# 📝 Edit Address
+@login_required(login_url='login')
+def edit_address(request, pk):
+    address = Address.objects.get(pk=pk, user=request.user)
+    if request.method == "POST":
+        address.full_name = request.POST['full_name']
+        address.phone = request.POST['phone']
+        address.pincode = request.POST['pincode']
+        address.street = request.POST['street']
+        address.city = request.POST['city']
+        address.state = request.POST['state']
+        address.landmark = request.POST.get('landmark', '')
+        address.is_default = 'is_default' in request.POST
+        address.save()
+        messages.success(request, "✅ Address updated successfully!")
+        return redirect('address_list')
+    return render(request, 'edit_address.html', {'address': address})
+
+
+# ❌ Delete Address
+@login_required(login_url='login')
+def delete_address(request, pk):
+    Address.objects.get(pk=pk, user=request.user).delete()
+    messages.warning(request, "🗑️ Address deleted.")
+    return redirect('address_list')

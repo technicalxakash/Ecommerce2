@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>🏠 My Addresses</h2>
+<a href="{% url 'add_address' %}" class="btn btn-primary mb-3">Add New Address</a>
+<ul class="list-group">
+  {% for addr in addresses %}
+  <li class="list-group-item">
+    <strong>{{ addr.full_name }}</strong> - {{ addr.phone }}<br>
+    {{ addr.street }}, {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}<br>
+    {% if addr.is_default %}
+      <span class="badge bg-success">Default</span>
+    {% endif %}
+    <a href="{% url 'edit_address' addr.id %}" class="btn btn-sm btn-warning">Edit</a>
+    <a href="{% url 'delete_address' addr.id %}" class="btn btn-sm btn-danger">Delete</a>
+  </li>
+  {% empty %}
+  <p>No addresses found.</p>
+  {% endfor %}
+</ul>
+{% endblock %}

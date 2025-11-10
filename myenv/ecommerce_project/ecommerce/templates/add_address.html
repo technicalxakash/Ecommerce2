@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Add Address{% endblock %}
+{% block content %}
+<h3 class="text-center mb-3">➕ Add New Address</h3>
+<form method="POST" class="col-md-6 offset-md-3 border p-4 rounded shadow">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-success w-100">Save Address</button>
+</form>
+{% endblock %}
