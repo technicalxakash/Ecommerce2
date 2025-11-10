@@ -140,7 +140,3 @@ LOGOUT_REDIRECT_URL = 'login'
 
 
 
-
-RAZORPAY_KEY_ID ="rzp_test_Qb9FJurfVY6ULB"
-
-RAZORPAY_KEY_SECRET = "YN2evifmyeL8T4qYmVresH3k"
